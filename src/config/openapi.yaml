@@ -1,0 +1,110 @@
+openapi: 3.0.0
+info:
+  title: Dia-Cura Med API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8009/api
+    description: Development server
+paths:
+  /users/register:
+    post:
+      summary: Register a new user
+      tags: [User]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterDTO"
+      responses:
+        "200":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDTO"
+        "400":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /auth/login:
+    post:
+      summary: Login a user
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginDTO"
+      responses:
+        "200":
+          description: User logged in successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponseDTO"
+components:
+  schemas:
+    RegisterDTO:
+      type: object
+      required: [username, email, password, role]
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [PATIENT, DOCTOR]
+
+    UserResponseDTO:
+      type: object
+      properties:
+        id:
+          type: number
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [PATIENT, DOCTOR]
+
+    LoginDTO:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    LoginResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [PATIENT, DOCTOR]
+        tokens:
+          type: object
+          properties:
+            accessToken:
+              type: string
+            refreshToken:
+              type: string
+
+  responses:
+    UnauthorizedError:
+      description: Authentication information is missing or invalid
+    NotFoundError:
+      description: The requested resource was not found

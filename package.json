@@ -1,23 +1,37 @@
 {
   "name": "dia-cura-med",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Dia-cure Med is an application that enables patients gain access to a medical doctor in-order to book consultations, study articles, nutritional tips or diets that help improve their health conditions. Also, they have free access to track their intake of drugs and next appointment date. It is a friendly application for both young and old.",
+  "main": "dist/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon --exec ts-node src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "format": "prettier --write \"**/*.{ts,js,json,md,prisma}\"",
+    "prettier:check": "prettier --check \"**/*.{ts,js,json,md,prisma}\"",
+    "migrate:dev": "npx prisma migrate dev",
+    "generate:prisma": "npx prisma generate",
+    "swagger": "ts-node src/config/swagger.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshleey/dia-cura-med.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Fatima Wonuola Adekunle-logun",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.16.3",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
     "bcryptjs": "^3.0.2",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.3",
+    "dotenv": "^16.4.5",
     "express": "^4.21.2",
     "express-async-errors": "^3.1.1",
+    "express-jsdoc-swagger": "^1.8.0",
     "express-validator": "^7.2.1",
     "express-xss-sanitizer": "^2.0.1",
     "helmet": "^8.1.0",
@@ -27,11 +41,16 @@
     "nodemailer": "^7.0.6",
     "prisma": "^6.16.3",
     "socket.io": "^4.8.1",
+    "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "yamljs": "^0.3.0",
+    "zod": "^4.1.11",
+    "zod-error": "^1.5.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
@@ -39,8 +58,10 @@
     "@types/node": "^24.6.2",
     "@types/nodemailer": "^7.0.2",
     "@types/socket.io": "^3.0.1",
+    "@types/yamljs": "^0.2.34",
     "nodemon": "^3.1.10",
     "prettier": "^3.6.2",
+    "prettier-plugin-prisma": "^5.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   }
