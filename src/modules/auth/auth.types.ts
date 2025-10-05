@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { loginSchema } from "../../validations/auth.validation";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  resetPasswordSchema,
+} from "../../validations/auth.validation";
 
 export type LoginDTO = z.infer<typeof loginSchema>;
 
@@ -11,6 +15,11 @@ export interface LoginResponseDTO {
   tokens: Tokens;
 }
 
+export type ForgotPasswordDTO = z.infer<typeof forgotPasswordSchema>;
+
+export type ResetPasswordDTO = z.infer<typeof resetPasswordSchema>;
+
+// Private classes
 interface Tokens {
   accessToken: string;
   refreshToken: string;
