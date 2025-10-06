@@ -6,9 +6,47 @@ import { NotFoundError } from "../../exceptions/not-found.exception";
 import { emailQueue } from "../../queues/email.queue";
 import { comparePassword, hashPassword } from "../../utils/bcrypt";
 import { generateOtpToken, verifyOtpToken } from "../../utils/otp-token";
-import { ForgotPasswordDTO, LoginDTO, ResetPasswordDTO } from "./auth.types";
+import {
+  ChangePasswordDTO,
+  ForgotPasswordDTO,
+  LoginDTO,
+  RefreshTokenDTO,
+  RegisterDTO,
+  ResetPasswordDTO,
+} from "./auth.types";
+import {
+  compareToken,
+  generateAccessToken,
+  hashToken,
+  verifyRefreshToken,
+} from "../../utils/jwt";
+import { UnauthorizedError } from "../../exceptions/unauthorized.exception";
+import { ForbiddenError } from "../../exceptions/forbidden.exception";
 
 export class AuthService {
+  static createUser = async (data: RegisterDTO) => {
+    const { username, email, password, role } = data;
+
+    const existing = await prisma.users.findUnique({ where: { email } });
+
+    if (existing) {
+      throw new ConflictError("User already exists");
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const user = await prisma.users.create({
+      data: { username, email, password: hashedPassword, role },
+    });
+
+    await emailQueue.add("send-welcome-email", {
+      email: user.email,
+      username: user.username,
+    });
+
+    return user;
+  };
+
   static authenticateUser = async (data: LoginDTO) => {
     const { email, password } = data;
 
@@ -21,7 +59,7 @@ export class AuthService {
     const passwordIsMatch = await comparePassword(password, user.password);
 
     if (!passwordIsMatch) {
-      throw new BadRequestError("Invalid Password");
+      throw new BadRequestError("Invalid Credentials");
     }
 
     return user;
@@ -32,7 +70,7 @@ export class AuthService {
 
     const user = await prisma.users.findUnique({ where: { email } });
 
-    if (!user) return;
+    if (!user) throw new NotFoundError("User not found");
 
     await prisma.otpToken.deleteMany({
       where: { userId: user.id },
@@ -89,5 +127,64 @@ export class AuthService {
       email: user.email,
       username: user.username,
     });
+  };
+
+  static changePassword = async (userId: string, data: ChangePasswordDTO) => {
+    const parsedId = Number(userId);
+    console.log(typeof userId);
+    if (isNaN(parsedId)) {
+      throw new BadRequestError("Invalid user ID provided");
+    }
+    const { oldPassword, newPassword } = data;
+
+    const user = await prisma.users.findUnique({ where: { id: parsedId } });
+    if (!user) throw new BadRequestError("User not found");
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) throw new BadRequestError("Old password is incorrect");
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.users.update({
+        where: { id: parsedId },
+        data: { password: hashedNewPassword },
+      });
+
+      // remove all refresh tokens (force re-login everywhere)
+      await tx.userSession.deleteMany({ where: { userId: parsedId } });
+    });
+  };
+
+  static refreshToken = async (token: string) => {
+    if (!token) {
+      throw new UnauthorizedError("No refresh token");
+    }
+
+    const decoded: any = verifyRefreshToken(token);
+
+    const session = await prisma.userSession.findFirst({
+      where: { userId: decoded.id },
+    });
+
+    if (!session) {
+      throw new ForbiddenError("Invalid refresh token");
+    }
+
+    const isValid = compareToken(token, session.token);
+
+    if (!isValid) {
+      throw new ForbiddenError("Invalid refresh token");
+    }
+
+    const user = await prisma.users.findUnique({ where: { id: decoded.id } });
+
+    console.log("User:", user);
+
+    if (!user) {
+      throw new UnauthorizedError("Invalid or expired refresh token");
+    }
+
+    return user;
   };
 }

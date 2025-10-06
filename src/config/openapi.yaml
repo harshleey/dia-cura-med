@@ -2,14 +2,21 @@ openapi: 3.0.0
 info:
   title: Dia-Cura Med API
   version: 1.0.0
+  description: Authentication endpoints for Dia-Cura Med
+
 servers:
   - url: http://localhost:8009/api
     description: Development server
+
+tags:
+  - name: Auth
+    description: Endpoints for authentication and user account management
+
 paths:
-  /users/register:
+  /auth/register:
     post:
       summary: Register a new user
-      tags: [User]
+      tags: [Auth]
       requestBody:
         required: true
         content:
@@ -17,20 +24,21 @@ paths:
             schema:
               $ref: "#/components/schemas/RegisterDTO"
       responses:
-        "200":
+        "201":
           description: User registered successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserResponseDTO"
         "400":
-          $ref: "#/components/responses/UnauthorizedError"
+          $ref: "#/components/responses/BadRequestError"
+        "409":
+          $ref: "#/components/responses/ConflictError"
 
   /auth/login:
     post:
-      summary: Login a user
-      tags:
-        - Auth
+      summary: Login an existing user
+      tags: [Auth]
       requestBody:
         required: true
         content:
@@ -44,7 +52,114 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LoginResponseDTO"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /auth/forgot-password:
+    post:
+      summary: Request a password reset token
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordDTO"
+      responses:
+        "200":
+          description: Token sent to email successfully
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /auth/reset-password/{userId}/{resetToken}:
+    post:
+      summary: Reset user password
+      tags: [Auth]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: resetToken
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResetPasswordDTO"
+      responses:
+        "200":
+          description: Password reset successfully
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+
+  /auth/change-password:
+    patch:
+      summary: Change password for an authenticated user
+      tags: [Auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangePasswordDTO"
+      responses:
+        "200":
+          description: Password changed successfully
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /auth/logout:
+    post:
+      summary: Logout user and invalidate refresh token
+      tags: [Auth]
+      responses:
+        "200":
+          description: Logged out successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /auth/refresh-token:
+    post:
+      summary: Refresh expired access token using refresh token cookie
+      tags: [Auth]
+      responses:
+        "200":
+          description: New access token generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     RegisterDTO:
       type: object
@@ -52,23 +167,31 @@ components:
       properties:
         username:
           type: string
+          example: johndoe
         email:
           type: string
+          format: email
+          example: johndoe@gmail.com
         password:
           type: string
+          example: Password@123
         role:
           type: string
           enum: [PATIENT, DOCTOR]
+          example: PATIENT
 
     UserResponseDTO:
       type: object
       properties:
         id:
-          type: number
+          type: string
+          example: "1"
         username:
           type: string
+          example: johndoe
         email:
           type: string
+          example: johndoe@gmail.com
         role:
           type: string
           enum: [PATIENT, DOCTOR]
@@ -79,19 +202,23 @@ components:
       properties:
         email:
           type: string
-          format: email
+          example: johndoe@gmail.com
         password:
           type: string
+          example: Password@123
 
     LoginResponseDTO:
       type: object
       properties:
         id:
           type: string
+          example: "1"
         username:
           type: string
+          example: johndoe
         email:
           type: string
+          example: johndoe@gmail.com
         role:
           type: string
           enum: [PATIENT, DOCTOR]
@@ -100,11 +227,45 @@ components:
           properties:
             accessToken:
               type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
             refreshToken:
               type: string
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    ForgotPasswordDTO:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          example: johndoe@gmail.com
+
+    ResetPasswordDTO:
+      type: object
+      required: [newPassword]
+      properties:
+        newPassword:
+          type: string
+          example: NewPassword@123
+
+    ChangePasswordDTO:
+      type: object
+      required: [oldPassword, newPassword]
+      properties:
+        oldPassword:
+          type: string
+          example: OldPassword@123
+        newPassword:
+          type: string
+          example: NewPassword@123
 
   responses:
+    BadRequestError:
+      description: Invalid request parameters
     UnauthorizedError:
       description: Authentication information is missing or invalid
     NotFoundError:
       description: The requested resource was not found
+    ConflictError:
+      description: The resource already exists

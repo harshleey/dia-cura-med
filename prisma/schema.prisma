@@ -14,7 +14,8 @@ model Users {
   password String
   role     Role
 
-  OtpToken OtpToken[]
+  OtpToken    OtpToken[]
+  UserSession userSession[]
 }
 
 model OtpToken {
@@ -24,6 +25,15 @@ model OtpToken {
   user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model userSession {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  token     String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  user      Users    @relation(fields: [userId], references: [id])
 }
 
 enum Role {

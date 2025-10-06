@@ -2,6 +2,7 @@ import express, { Express } from "express";
 import helmet from "helmet";
 import cors from "cors";
 import compression from "compression";
+import cookieParser from "cookie-parser";
 import "express-async-errors";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
@@ -14,7 +15,12 @@ const app: Express = express();
 
 // Middlewares
 app.use(express.json());
-app.use(cors());
+app.use(cookieParser());
+app.use(
+  cors({
+    credentials: true,
+  }),
+);
 app.use(helmet());
 app.use(compression());
 
@@ -29,7 +35,6 @@ app.get("/", express.static("public"));
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
-app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 
 export default app;

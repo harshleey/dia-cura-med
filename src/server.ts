@@ -1,9 +1,8 @@
 import http from "http";
 import dotenv from "dotenv";
+dotenv.config();
 import app from "./app";
 import { emailWorker } from "./queues/workers/email.worker";
-
-dotenv.config();
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);
