@@ -7,9 +7,13 @@ import "express-async-errors";
 import swaggerUi from "swagger-ui-express";
 import YAML from "yamljs";
 import path from "path";
+import { errorHandler } from "./middlewares/error.middleware";
 
 import userRoutes from "./modules/users/user.routes";
 import authRoutes from "./modules/auth/auth.routes";
+import kycRoutes from "./modules/kyc/kyc.routes";
+import patientRoutes from "./modules/patients/patient.routes";
+import doctorRoutes from "./modules/doctors/doctor.routes";
 
 const app: Express = express();
 
@@ -36,5 +40,10 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 app.use("/api/auth", authRoutes);
+app.use("/api/kyc", kycRoutes);
+app.use("/api/patients", patientRoutes);
+app.use("/api/doctors", doctorRoutes);
+
+app.use(errorHandler);
 
 export default app;

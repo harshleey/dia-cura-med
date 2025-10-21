@@ -1,5 +1,17 @@
-node_modules
 # Keep environment variables out of version control
 .env
+*.env
+*.sql
+*.sqlite
+*.db
 
+# Ignore local build or output folders
+node_modules/
+dist/
+coverage/
+
+
+
+# Ignore Prisma generated files
 /generated/prisma
+prisma/migrations/migration_lock.toml

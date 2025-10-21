@@ -8,23 +8,25 @@ datasource db {
 }
 
 model Users {
-  id       Int    @id(map: "User_pkey") @default(autoincrement())
-  username String @unique(map: "User_username_key")
-  email    String @unique(map: "User_email_key")
-  password String
-  role     Role
-
-  OtpToken    OtpToken[]
-  UserSession userSession[]
+  id               Int               @id @default(autoincrement())
+  username         String            @unique
+  email            String            @unique
+  password         String
+  role             Role
+  ConsentAgreement ConsentAgreement?
+  DoctorKyc        DoctorKyc?
+  OtpToken         OtpToken[]
+  PatientKyc       PatientKyc?
+  UserSession      userSession[]
 }
 
 model OtpToken {
   id        String   @id @default(cuid())
   token     String   @unique
   userId    Int
-  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
   createdAt DateTime @default(now())
+  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model userSession {
@@ -36,8 +38,98 @@ model userSession {
   user      Users    @relation(fields: [userId], references: [id])
 }
 
+model PatientKyc {
+  id                 Int               @id @default(autoincrement())
+  userId             Int               @unique
+  firstName          String?
+  lastName           String?
+  phoneNumber        String?
+  dateOfBirth        DateTime?
+  age                Int?
+  gender             String?
+  diabetesType       String?
+  otherDiabetesType  String?
+  diagnosisDate      DateTime?
+  tracksInsulin      Boolean?
+  insulinTherapy     String?
+  glucoseUnit        String?
+  measurementSystem  String?
+  hasAllergies       Boolean?
+  allergyDetails     String?
+  currentMedications String[]
+  currentStep        Int               @default(1)
+  kycStatus          KycStatus         @default(PENDING)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  consentId          Int?
+  consent            ConsentAgreement? @relation(fields: [consentId], references: [id])
+  user               Users             @relation(fields: [userId], references: [id])
+}
+
+model DoctorKyc {
+  id                    Int               @id @default(autoincrement())
+  userId                Int               @unique
+  firstName             String?
+  lastName              String?
+  email                 String?
+  countryOfResidence    String?
+  cityOfResidence       String?
+  phoneNumber           String?
+  dateOfBirth           DateTime?
+  gender                String?
+  hospitalIdCardUrl     String?
+  medicalCertificateUrl String?
+  nationalIdUrl         String?
+  selfieUrl             String?
+  consentId             Int?
+  assessmentSent        Boolean?          @default(false)
+  assessmentSentAt      DateTime?
+  assessmentUploadUrl   String?
+  assessmentScore       Int?
+  kycStatus             KycStatus         @default(PENDING)
+  currentStep           Int               @default(1)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  consent               ConsentAgreement? @relation(fields: [consentId], references: [id])
+  user                  Users             @relation(fields: [userId], references: [id])
+}
+
+model ConsentAgreement {
+  id               Int          @id @default(autoincrement())
+  userId           Int          @unique
+  consentAccepted  Boolean      @default(false)
+  agreementVersion String?
+  acceptedAt       DateTime?
+  ipAddress        String?
+  consentType      ConsentType?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  firstName        String?
+  hodEmail         String?
+  hodFirstName     String?
+  hodLastName      String?
+  hodPhone         String?
+  lastName         String?
+  user             Users        @relation(fields: [userId], references: [id])
+  DoctorKyc        DoctorKyc[]
+  PatientKyc       PatientKyc[]
+}
+
+enum KycStatus {
+  PENDING
+  PASSED
+  FAILED
+  COMPLETED
+  IN_PROGRESS
+}
+
 enum Role {
   PATIENT
   DOCTOR
   ADMIN
+}
+
+enum ConsentType {
+  PATIENT_KYC
+  DOCTOR_KYC
 }

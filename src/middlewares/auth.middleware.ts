@@ -2,8 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiResponse } from "../utils/response.types";
 
+export interface AuthRequest extends Request {
+  user?: any;
+}
+
 export const authMiddleWare = (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction,
 ) => {
@@ -23,8 +27,8 @@ export const authMiddleWare = (
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
 
-    console.log(decoded);
-    req.body.user = decoded;
+    req.user = decoded;
+
     next();
   } catch (err: any) {
     return res.status(401).json("Invalid or expired token");
