@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { authMiddleWare } from "../../middlewares/auth.middleware";
-import { authorizeRoles } from "../../middlewares/authorize-roles.middleware";
+import {
+  authorizeRoles,
+  requireVerifiedRole,
+} from "../../middlewares/authorize-roles.middleware";
 import {
   doctorKycConsent,
   doctorKycStep1,
@@ -43,18 +46,22 @@ router.post("/patient-kyc/consent", patientOnly, patientKycConsent);
 router.post("/doctor-kyc/step1", doctorOnly, doctorKycStep1);
 router.post(
   "/doctor-kyc/step2",
-  doctorOnly,
+  requireVerifiedRole(["DOCTOR"]),
   doctorKycUpload,
   validateKycFiles,
   doctorKycStep2,
 );
 router.post(
   "/doctor-kyc/step3",
-  doctorOnly,
+  requireVerifiedRole(["DOCTOR"]),
   upload.fields([{ name: "selfieUrl", maxCount: 1 }]),
   validateSelfieFile,
   doctorKycStep3,
 );
-router.post("/doctor-kyc/step4", doctorOnly, doctorKycConsent);
+router.post(
+  "/doctor-kyc/step4",
+  requireVerifiedRole(["DOCTOR"]),
+  doctorKycConsent,
+);
 
 export default router;

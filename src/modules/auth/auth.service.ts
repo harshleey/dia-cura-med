@@ -110,7 +110,7 @@ export class AuthService {
     if (!user) throw new NotFoundError("User not found");
 
     await prisma.$transaction(async (tx) => {
-      const isTokenValid = await verifyOtpToken(resetToken, userId);
+      const isTokenValid = await verifyOtpToken(resetToken, parsedId);
       if (!isTokenValid) throw new BadRequestError("Invalid or expired token");
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -129,15 +129,10 @@ export class AuthService {
     });
   };
 
-  static changePassword = async (userId: string, data: ChangePasswordDTO) => {
-    const parsedId = Number(userId);
-    console.log(typeof userId);
-    if (isNaN(parsedId)) {
-      throw new BadRequestError("Invalid user ID provided");
-    }
+  static changePassword = async (userId: number, data: ChangePasswordDTO) => {
     const { oldPassword, newPassword } = data;
 
-    const user = await prisma.users.findUnique({ where: { id: parsedId } });
+    const user = await prisma.users.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestError("User not found");
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
@@ -147,12 +142,12 @@ export class AuthService {
 
     await prisma.$transaction(async (tx) => {
       await tx.users.update({
-        where: { id: parsedId },
+        where: { id: userId },
         data: { password: hashedNewPassword },
       });
 
       // remove all refresh tokens (force re-login everywhere)
-      await tx.userSession.deleteMany({ where: { userId: parsedId } });
+      await tx.userSession.deleteMany({ where: { userId: userId } });
     });
   };
 
@@ -178,8 +173,6 @@ export class AuthService {
     }
 
     const user = await prisma.users.findUnique({ where: { id: decoded.id } });
-
-    console.log("User:", user);
 
     if (!user) {
       throw new UnauthorizedError("Invalid or expired refresh token");

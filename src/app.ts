@@ -14,6 +14,7 @@ import authRoutes from "./modules/auth/auth.routes";
 import kycRoutes from "./modules/kyc/kyc.routes";
 import patientRoutes from "./modules/patients/patient.routes";
 import doctorRoutes from "./modules/doctors/doctor.routes";
+import profileRoutes from "./modules/profile/profile.routes";
 
 const app: Express = express();
 
@@ -43,6 +44,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/kyc", kycRoutes);
 app.use("/api/patients", patientRoutes);
 app.use("/api/doctors", doctorRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/profile", profileRoutes);
 
 app.use(errorHandler);
 

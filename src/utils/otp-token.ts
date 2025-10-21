@@ -13,10 +13,10 @@ export const generateOtpToken = async () => {
   return { generatedOtpToken, hashedOtpToken };
 };
 
-export const verifyOtpToken = async (token: string, id: string) => {
+export const verifyOtpToken = async (token: string, userId: number) => {
   // ensure otp record exist
   const matchedOTPRecord = await prisma.otpToken.findFirst({
-    where: { userId: Number(id), expiresAt: { gt: new Date() } },
+    where: { userId, expiresAt: { gt: new Date() } },
   });
 
   if (!matchedOTPRecord) {
@@ -30,7 +30,7 @@ export const verifyOtpToken = async (token: string, id: string) => {
   const isExpired = currentDateTime > new Date(expiresAt);
 
   if (isExpired) {
-    await prisma.otpToken.deleteMany({ where: { userId: Number(id) } });
+    await prisma.otpToken.deleteMany({ where: { userId } });
     throw new BadRequestError("Code has expired. Request for a new one.");
   }
 
@@ -42,7 +42,7 @@ export const verifyOtpToken = async (token: string, id: string) => {
     throw new BadRequestError("Invalid Token");
   }
 
-  await prisma.otpToken.deleteMany({ where: { userId: Number(id) } });
+  await prisma.otpToken.deleteMany({ where: { userId } });
 
   return verifyOTP;
 };

@@ -36,15 +36,12 @@ type DoctorKycDTO =
 
 export class KycService {
   static updatePatientKycStep = async (
-    userId: string,
-    stepNumber: Number,
+    userId: number,
+    stepNumber: number,
     data: PatientKycDTO,
   ) => {
-    const parsedId = Number(userId);
-    const parsedStep = Number(stepNumber);
-
     const user = await prisma.users.findUnique({
-      where: { id: parsedId },
+      where: { id: userId },
     });
 
     if (!user) throw new NotFoundError("User not found");
@@ -61,17 +58,17 @@ export class KycService {
     };
 
     const patientKyc = await prisma.patientKyc.upsert({
-      where: { userId: parsedId },
+      where: { userId },
       update: {
         ...processedData,
         kycStatus: "IN_PROGRESS",
-        currentStep: parsedStep,
+        currentStep: stepNumber,
       },
       create: {
-        userId: parsedId,
+        userId,
         ...processedData,
         kycStatus: "IN_PROGRESS",
-        currentStep: parsedStep,
+        currentStep: stepNumber,
       },
     });
 
@@ -79,22 +76,19 @@ export class KycService {
   };
 
   static updatePatientKycAgreement = async (
-    userId: string,
-    stepNumber: Number,
+    userId: number,
+    stepNumber: number,
     data: PatientKycStep6DTO,
     ipAddress: string,
   ) => {
-    const parsedId = Number(userId);
-    const parsedStep = Number(stepNumber);
-
     const user = await prisma.users.findUnique({
-      where: { id: parsedId },
+      where: { id: userId },
     });
 
     if (!user) throw new NotFoundError("User not found");
 
     const kycAgreement = await prisma.consentAgreement.upsert({
-      where: { userId: parsedId },
+      where: { userId },
       update: {
         consentAccepted: true,
         acceptedAt: new Date(),
@@ -103,7 +97,7 @@ export class KycService {
         consentType: "PATIENT_KYC",
       },
       create: {
-        userId: parsedId,
+        userId,
         consentAccepted: true,
         acceptedAt: new Date(),
         agreementVersion: "v1.0",
@@ -113,10 +107,10 @@ export class KycService {
     });
 
     await prisma.patientKyc.update({
-      where: { userId: parsedId },
+      where: { userId },
       data: {
         kycStatus: "COMPLETED",
-        currentStep: parsedStep,
+        currentStep: stepNumber,
         consentId: kycAgreement.id,
       },
     });
@@ -125,16 +119,13 @@ export class KycService {
   };
 
   static updateDoctorKycStep = async (
-    userId: string,
-    stepNumber: Number,
+    userId: number,
+    stepNumber: number,
     data: DoctorKycDTO,
     files?: Express.Multer.File[],
   ) => {
-    const parsedId = Number(userId);
-    const parsedStep = Number(stepNumber);
-
     const user = await prisma.users.findUnique({
-      where: { id: parsedId },
+      where: { id: userId },
     });
 
     if (!user) throw new NotFoundError("User not found");
@@ -148,7 +139,7 @@ export class KycService {
     };
 
     // Handle uploads depending on step
-    if (parsedStep === 2) {
+    if (stepNumber === 2) {
       if (!files || files.length !== 3) {
         throw new Error("Step 2 requires exactly 3 files");
       }
@@ -177,7 +168,7 @@ export class KycService {
     }
 
     // Step 3 — Upload Selfie
-    if (parsedStep === 3 && files?.[0]) {
+    if (stepNumber === 3 && files?.[0]) {
       processedData.selfieUrl = await uploadToCloudinary(
         files[0],
         "diacura_doctors/selfies",
@@ -185,18 +176,18 @@ export class KycService {
     }
 
     const doctorKyc = await prisma.doctorKyc.upsert({
-      where: { userId: parsedId },
+      where: { userId },
       update: {
         ...processedData,
         kycStatus: "IN_PROGRESS",
-        currentStep: parsedStep,
+        currentStep: stepNumber,
         updatedAt: new Date(),
       },
       create: {
-        userId: parsedId,
+        userId,
         ...processedData,
         kycStatus: "IN_PROGRESS",
-        currentStep: parsedStep,
+        currentStep: stepNumber,
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -206,16 +197,13 @@ export class KycService {
   };
 
   static updateDoctorKycAgreement = async (
-    userId: string,
-    stepNumber: Number,
+    userId: number,
+    stepNumber: number,
     data: DoctorKycStep4DTO,
     ipAddress: string,
   ) => {
-    const parsedId = Number(userId);
-    const parsedStep = Number(stepNumber);
-
     const user = await prisma.users.findUnique({
-      where: { id: parsedId },
+      where: { id: userId },
     });
 
     if (!user) throw new NotFoundError("User not found");
@@ -223,7 +211,7 @@ export class KycService {
     const [kycAgreement, doctorKyc] = await prisma.$transaction(async (tx) => {
       // Step 1: Create or update consent agreement
       const kycAgreement = await tx.consentAgreement.upsert({
-        where: { userId: parsedId },
+        where: { userId },
         update: {
           ...data,
           consentAccepted: true,
@@ -233,7 +221,7 @@ export class KycService {
           consentType: "DOCTOR_KYC",
         },
         create: {
-          userId: parsedId,
+          userId,
           ...data,
           consentAccepted: true,
           acceptedAt: new Date(),
@@ -245,10 +233,10 @@ export class KycService {
 
       // Step 2: Update Doctor KYC status
       const doctorKyc = await tx.doctorKyc.update({
-        where: { userId: parsedId },
+        where: { userId },
         data: {
           kycStatus: "COMPLETED",
-          currentStep: parsedStep,
+          currentStep: stepNumber,
           consentId: kycAgreement.id,
           updatedAt: new Date(),
         },

@@ -9,7 +9,10 @@ import {
   refreshToken,
 } from "./auth.controller";
 import { authMiddleWare } from "../../middlewares/auth.middleware";
-import { authorizeRoles } from "../../middlewares/authorize-roles.middleware";
+import {
+  authorizeRoles,
+  requireVerifiedRole,
+} from "../../middlewares/authorize-roles.middleware";
 
 const router = Router();
 
@@ -20,7 +23,7 @@ router.patch("/reset-password/:resetToken/:userId", resetPassword);
 router.post(
   "/change-password",
   authMiddleWare,
-  authorizeRoles("DOCTOR"),
+  requireVerifiedRole(["DOCTOR", "PATIENT", "ADMIN"]),
   changePassword,
 );
 router.post("/logout", logout);

@@ -2,15 +2,9 @@ import { Router } from "express";
 import { authMiddleWare } from "../../middlewares/auth.middleware";
 import {
   authorizeRoles,
-  requireApprovedDoctor,
-  requireApprovedPatient,
+  requireVerifiedRole,
 } from "../../middlewares/authorize-roles.middleware";
-import {
-  deletePatient,
-  getAllPatients,
-  getPatient,
-  updatePatient,
-} from "./patient.controller";
+import { getAllPatients, getPatient } from "./patient.controller";
 
 const patientOnly = [authMiddleWare, authorizeRoles("PATIENT")];
 const doctorOnly = [authMiddleWare, authorizeRoles("DOCTOR")];
@@ -20,25 +14,9 @@ const router = Router();
 router.get(
   "/",
   authMiddleWare,
-  doctorOnly,
-  requireApprovedDoctor,
+  requireVerifiedRole(["DOCTOR"]),
   getAllPatients,
 );
-router.get(
-  "/:id",
-  authMiddleWare,
-  doctorOnly,
-  requireApprovedDoctor,
-  getPatient,
-);
-router.patch(
-  "/",
-  authMiddleWare,
-  patientOnly,
-  requireApprovedPatient,
-  updatePatient,
-);
-
-router.delete("/", authMiddleWare, patientOnly, deletePatient);
+router.get("/:id", authMiddleWare, requireVerifiedRole(["DOCTOR"]), getPatient);
 
 export default router;

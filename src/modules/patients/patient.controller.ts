@@ -30,35 +30,3 @@ export const getPatient = async (
     next(err);
   }
 };
-
-export const updatePatient = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const userId = req.user.id;
-    const parsed = updatePatientSchema.parse(req.body);
-
-    const updatedPatient = await PatientService.updatePatient(userId, parsed);
-    res
-      .status(200)
-      .json(ApiResponse.success("Patient updated", updatedPatient));
-  } catch (err: any) {
-    next(err);
-  }
-};
-
-export const deletePatient = async (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const userId = req.user?.id;
-    const updatedPatient = await PatientService.deletePatient(userId);
-    res.status(200).json(ApiResponse.success("Deleted"));
-  } catch (err: any) {
-    next(err);
-  }
-};
