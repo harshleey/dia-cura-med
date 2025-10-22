@@ -3,6 +3,7 @@ import IORedis from "ioredis";
 import { UserEmailService } from "../../emails/services/user-email.service";
 import { redisConnection } from "../../config/redis";
 import { AuthEmailService } from "../../emails/services/auth-email.service";
+import { KycEmailService } from "../../emails/services/kyc-email.service";
 
 export const emailWorker = new Worker(
   "email-queue",
@@ -21,6 +22,16 @@ export const emailWorker = new Worker(
     if (job.name === "send-password-reset-success") {
       const { email, username } = job.data;
       await AuthEmailService.sendResetPasswordSuccessEmail(email, username);
+    }
+
+    if (job.name === "patient-kyc-completed") {
+      const { email, username } = job.data;
+      await KycEmailService.sendPatientKycCompletedEmail(email, username);
+    }
+
+    if (job.name === "doctor-kyc-completed") {
+      const { email, username } = job.data;
+      await KycEmailService.sendDoctorKycCompletedEmail(email, username);
     }
   },
   { connection: redisConnection },

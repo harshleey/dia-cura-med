@@ -73,7 +73,7 @@ export class ProfileService {
       });
 
       if (!user) {
-        throw new Error("User not found");
+        throw new NotFoundError("User not found");
       }
 
       await tx.userSession.deleteMany({ where: { userId } });

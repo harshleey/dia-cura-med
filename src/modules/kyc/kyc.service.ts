@@ -19,6 +19,7 @@ import {
   DoctorKycStep5DTO,
 } from "./kyc.types";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
+import { emailQueue } from "../../queues/email.queue";
 
 type PatientKycDTO =
   | PatientKycStep1DTO
@@ -113,6 +114,11 @@ export class KycService {
         currentStep: stepNumber,
         consentId: kycAgreement.id,
       },
+    });
+
+    await emailQueue.add("patient-kyc-completed", {
+      email: user.email,
+      username: user.username,
     });
 
     return kycAgreement;
@@ -243,6 +249,11 @@ export class KycService {
       });
 
       return [kycAgreement, doctorKyc];
+    });
+
+    await emailQueue.add("doctor-kyc-completed", {
+      email: user.email,
+      username: user.username,
     });
 
     return { kycAgreement, doctorKyc };
