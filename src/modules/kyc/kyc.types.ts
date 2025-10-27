@@ -7,7 +7,7 @@ import {
   patientKycStep4Schema,
   patientKycStep5Schema,
   patientKycStep6Schema,
-} from "../../validations/patient-kyc.validation";
+} from "./patient-kyc.validation";
 import {
   doctorKycStep1Schema,
   doctorKycStep2Schema,
@@ -15,7 +15,7 @@ import {
   doctorKycStep4Schema,
   doctorKycStep5Schema,
   doctorKycStep6Schema,
-} from "../../validations/doctor-kyc.validation";
+} from "./doctor-kyc.validation";
 
 // PATIENTS
 

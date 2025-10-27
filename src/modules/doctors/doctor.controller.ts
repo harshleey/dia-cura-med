@@ -10,8 +10,6 @@ export const getAllApprovedDoctors = async (
 ) => {
   try {
     const doctors = await DoctorService.getAllApprovedDoctors();
-
-    console.log(doctors);
     res.status(200).json(ApiResponse.success("Doctors fetched", doctors));
   } catch (err: any) {
     next(err);

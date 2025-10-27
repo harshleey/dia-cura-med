@@ -6,7 +6,7 @@ import {
   patientKycStep4Schema,
   patientKycStep5Schema,
   patientKycStep6Schema,
-} from "../../validations/patient-kyc.validation";
+} from "./patient-kyc.validation";
 import {
   DoctorKycStep1DTO,
   DoctorKycStep2DTO,
@@ -26,9 +26,8 @@ import {
   doctorKycStep1Schema,
   doctorKycStep2Schema,
   doctorKycStep4Schema,
-} from "../../validations/doctor-kyc.validation";
+} from "./doctor-kyc.validation";
 import multer from "multer";
-import { log } from "console";
 import { AuthRequest } from "../../middlewares/auth.middleware";
 
 export const patientKycStep1 = async (
@@ -52,14 +51,11 @@ export const patientKycStep1 = async (
       }),
     );
   } catch (err: any) {
-    // Handle validation errors
     if (err instanceof ZodError) {
       return res
         .status(400)
         .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-
-    // Let global error middleware handle known/unknown errors
     next(err);
   }
 };
@@ -84,14 +80,11 @@ export const patientKycStep2 = async (
       }),
     );
   } catch (err: any) {
-    // Handle validation errors
     if (err instanceof ZodError) {
       return res
         .status(400)
         .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-
-    // Let global error middleware handle known/unknown errors
     next(err);
   }
 };
@@ -116,14 +109,11 @@ export const patientKycStep3 = async (
       }),
     );
   } catch (err: any) {
-    // Handle validation errors
     if (err instanceof ZodError) {
       return res
         .status(400)
         .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-
-    // Let global error middleware handle known/unknown errors
     next(err);
   }
 };
@@ -148,14 +138,11 @@ export const patientKycStep4 = async (
       }),
     );
   } catch (err: any) {
-    // Handle validation errors
     if (err instanceof ZodError) {
       return res
         .status(400)
         .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-
-    // Let global error middleware handle known/unknown errors
     next(err);
   }
 };
@@ -180,14 +167,11 @@ export const patientKycStep5 = async (
       }),
     );
   } catch (err: any) {
-    // Handle validation errors
     if (err instanceof ZodError) {
       return res
         .status(400)
         .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-
-    // Let global error middleware handle known/unknown errors
     next(err);
   }
 };
@@ -217,14 +201,11 @@ export const patientKycConsent = async (
       }),
     );
   } catch (err: any) {
-    // Handle validation errors
     if (err instanceof ZodError) {
       return res
         .status(400)
         .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-
-    // Let global error middleware handle known/unknown errors
     next(err);
   }
 };
@@ -236,7 +217,15 @@ export const doctorKycStep1 = async (
 ) => {
   try {
     const userId = req.user.id;
+    const userEmail = req.user.email;
     const parsed: DoctorKycStep1DTO = doctorKycStep1Schema.parse(req.body);
+
+    // ✅ Ensure email matches the one used to sign up
+    if (parsed.email.toLowerCase() !== userEmail.toLowerCase()) {
+      return res
+        .status(400)
+        .json(ApiResponse.error("Email does not match your account email"));
+    }
 
     const savedDoctor = await KycService.updateDoctorKycStep(userId, 1, {
       ...parsed,
@@ -250,14 +239,11 @@ export const doctorKycStep1 = async (
       }),
     );
   } catch (err: any) {
-    // Handle validation errors
     if (err instanceof ZodError) {
       return res
         .status(400)
         .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-
-    // Let global error middleware handle known/unknown errors
     next(err);
   }
 };
@@ -392,7 +378,6 @@ export const doctorKycConsent = async (
 ) => {
   try {
     const userId = req.user.id;
-    console.log(req.body);
     const parsed: DoctorKycStep4DTO = doctorKycStep4Schema.parse(req.body);
     const ipAddress: string =
       req.ip || req.headers["x-forwarded-for"]?.toString() || "unknown";
@@ -411,14 +396,11 @@ export const doctorKycConsent = async (
       }),
     );
   } catch (err: any) {
-    // Handle validation errors
     if (err instanceof ZodError) {
       return res
         .status(400)
         .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-
-    // Let global error middleware handle known/unknown errors
     next(err);
   }
 };

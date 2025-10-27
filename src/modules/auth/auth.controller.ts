@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import jwt from "jsonwebtoken";
 import {
   ChangePasswordDTO,
   ForgotPasswordDTO,
@@ -14,7 +15,7 @@ import {
   loginSchema,
   registerSchema,
   resetPasswordSchema,
-} from "../../validations/auth.validation";
+} from "./auth.validation";
 import { ZodError } from "zod";
 import { formatZodError } from "../../utils/format-zod-error";
 import { ApiResponse } from "../../utils/response.types";
@@ -28,6 +29,7 @@ import { AuthService } from "./auth.service";
 import { prisma } from "../../config/db";
 import { UnauthorizedError } from "../../exceptions/unauthorized.exception";
 import { NotFoundError } from "../../exceptions/not-found.exception";
+import { redisConnection } from "../../config/redis";
 
 export const registerUser = async (
   req: Request,
@@ -51,15 +53,11 @@ export const registerUser = async (
       .json(ApiResponse.success("User created successfully", userResponse));
   } catch (err: any) {
     if (err instanceof ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: formatZodError(err),
-      });
+      return res
+        .status(400)
+        .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-    return res
-      .status(err.statusCode || 500)
-      .json(ApiResponse.error(err.message));
+    next(err);
   }
 };
 
@@ -110,15 +108,11 @@ export const loginUser = async (
       .json(ApiResponse.success("Login Successful", loginResponse));
   } catch (err: any) {
     if (err instanceof ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: formatZodError(err),
-      });
+      return res
+        .status(400)
+        .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-    return res
-      .status(err.statusCode || 500)
-      .json(ApiResponse.error(err.message));
+    next(err);
   }
 };
 
@@ -135,15 +129,11 @@ export const forgotPassword = async (
     return res.status(200).json(ApiResponse.success("Token sent to email"));
   } catch (err: any) {
     if (err instanceof ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: formatZodError(err),
-      });
+      return res
+        .status(400)
+        .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-    return res
-      .status(err.statusCode || 500)
-      .json(ApiResponse.error(err.message));
+    next(err);
   }
 };
 
@@ -163,15 +153,11 @@ export const resetPassword = async (
       .json(ApiResponse.success("Password reset successful"));
   } catch (err: any) {
     if (err instanceof ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: formatZodError(err),
-      });
+      return res
+        .status(400)
+        .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-    return res
-      .status(err.statusCode || 500)
-      .json(ApiResponse.error(err.message));
+    next(err);
   }
 };
 
@@ -183,22 +169,16 @@ export const changePassword = async (
   try {
     const parsed: ChangePasswordDTO = changePasswordSchema.parse(req.body);
 
-    // console.log(req.body.user.userId);
-
     await AuthService.changePassword(req.body.user.id, parsed);
 
     res.status(200).json(ApiResponse.success("Password updated successfully"));
   } catch (err: any) {
     if (err instanceof ZodError) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: formatZodError(err),
-      });
+      return res
+        .status(400)
+        .json(ApiResponse.error("Validation failed", formatZodError(err)));
     }
-    return res
-      .status(err.statusCode || 500)
-      .json(ApiResponse.error(err.message));
+    next(err);
   }
 };
 
@@ -207,25 +187,36 @@ export const logout = async (
   res: Response,
   next: NextFunction,
 ) => {
-  console.log(req.cookies);
   const refreshToken = req.cookies.refreshToken;
+  const authHeader = req.headers.authorization;
+
   if (!refreshToken) {
     throw new UnauthorizedError("No refresh token");
   }
   try {
     const decoded: any = verifyRefreshToken(refreshToken);
 
-    const sessions = await prisma.userSession.findMany({
-      where: { userId: decoded.id },
-    });
-
-    if (!sessions.length) {
-      throw new NotFoundError("No active sessions found for this user");
-    }
-
+    // Delete all user sessions
     await prisma.userSession.deleteMany({
       where: { userId: decoded.id },
     });
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const accessToken = authHeader.split(" ")[1];
+      const decodedAccess: any = jwt.decode(accessToken);
+      const expiresAt = decodedAccess?.exp;
+
+      if (expiresAt) {
+        const ttl = expiresAt - Math.floor(Date.now() / 1000);
+        if (ttl > 0) {
+          await redisConnection.setex(
+            `blacklist:${accessToken}`,
+            ttl,
+            "revoked",
+          );
+        }
+      }
+    }
 
     res.clearCookie("refreshToken", { path: "/auth/refresh-token" });
 
@@ -249,7 +240,6 @@ export const refreshToken = async (
 
     res.json({ accessToken: newAccessToken });
   } catch (error) {
-    res.status(400).json(ApiResponse.error("Invalid or expired refresh token"));
     next(error);
   }
 };

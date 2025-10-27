@@ -4,9 +4,24 @@ import { DoctorResponseDTO, DoctorListResponseDTO } from "./doctor.types";
 
 export class DoctorService {
   // ✅ Get all doctors (only ADMIN)
-  static getAllApprovedDoctors = async (): Promise<DoctorListResponseDTO[]> => {
+  static getAllApprovedDoctors = async (
+    search?: string,
+  ): Promise<DoctorListResponseDTO[]> => {
+    const whereClause: any = {
+      kycStatus: "PASSED",
+    };
+
+    // Optional search filter
+    if (search) {
+      whereClause.OR = [
+        { firstName: { contains: search, mode: "insensitive" } },
+        { lastName: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
     const doctors = await prisma.doctorKyc.findMany({
-      where: { kycStatus: "PASSED" },
+      where: whereClause,
       include: { user: true },
       orderBy: { createdAt: "desc" },
     });

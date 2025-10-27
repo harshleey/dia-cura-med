@@ -1,6 +1,6 @@
 // src/dtos/doctor.dto.ts
 import { z } from "zod";
-import { updateDoctorSchema } from "../../validations/doctor.validation";
+import { updateDoctorSchema } from "./doctor.validation";
 
 export type UpdateDoctorDTO = z.infer<typeof updateDoctorSchema>;
 

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../exceptions/base.exception";
 import { ApiResponse } from "../utils/response.types";
+import { Prisma } from "@prisma/client";
 
 export const errorHandler = (
   err: Error,
@@ -8,8 +9,6 @@ export const errorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
-  console.error("Error caught by global handler:", err);
-
   // Handle your custom AppError instances
   if (err instanceof AppError) {
     return res.status(err.statusCode).json(ApiResponse.error(err.message));
@@ -21,6 +20,31 @@ export const errorHandler = (
     err.message.toLowerCase().includes("bad request")
   ) {
     return res.status(400).json(ApiResponse.error("Bad request"));
+  }
+
+  // Handle Prisma Known Errors (e.g., unique constraint)
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === "P2002") {
+      const field = (err.meta?.target as string[])?.join(", ") || "field";
+      return res
+        .status(409)
+        .json(ApiResponse.error(`A user with this ${field} already exists`));
+    }
+
+    if (err.code === "P2025") {
+      return res.status(404).json(ApiResponse.error("Record not found"));
+    }
+
+    if (err.code === "P2003") {
+      return res
+        .status(400)
+        .json(ApiResponse.error("Foreign key constraint failed"));
+    }
+
+    // fallback for any other known Prisma error
+    return res
+      .status(400)
+      .json(ApiResponse.error(`Database error: ${err.message}`));
   }
 
   // Handle Prisma not found errors

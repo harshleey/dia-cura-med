@@ -28,7 +28,6 @@ export const requireVerifiedRole = (
 ) => {
   return async (req: AuthRequest, res: Response, next: NextFunction) => {
     const user = req.user;
-    console.log(user);
     if (!user || !roles.includes(user.role as any)) {
       return res.status(403).json(ApiResponse.error("Access denied"));
     }
@@ -50,7 +49,6 @@ export const requireVerifiedRole = (
         where: { userId: user.id },
         select: { kycStatus: true },
       });
-      console.log(patientKyc);
       if (!patientKyc || patientKyc.kycStatus !== "COMPLETED") {
         return res
           .status(403)

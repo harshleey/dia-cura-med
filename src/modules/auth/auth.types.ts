@@ -5,7 +5,7 @@ import {
   resetPasswordSchema,
   changePasswordSchema,
   registerSchema,
-} from "../../validations/auth.validation";
+} from "./auth.validation";
 
 export type RegisterDTO = z.infer<typeof registerSchema>;
 

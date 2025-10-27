@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiResponse } from "../utils/response.types";
+import { redisConnection } from "../config/redis";
 
 export interface AuthRequest extends Request {
   user?: any;
 }
 
-export const authMiddleWare = (
+export const authMiddleWare = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
@@ -23,6 +24,14 @@ export const authMiddleWare = (
       return res
         .status(500)
         .json(ApiResponse.error("JWT secret not configured"));
+    }
+
+    // Check blacklist
+    const isBlacklisted = await redisConnection.get(`blacklist:${token}`);
+    if (isBlacklisted) {
+      return res
+        .status(401)
+        .json(ApiResponse.error("Session expired. Please log in again."));
     }
 
     const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);

@@ -42,7 +42,14 @@ export const patientKycStep4Schema = z
   .refine((data) => !data.hasAllergies || !!data.allergyDetails, {
     message: "Please specify your allergies",
     path: ["allergyDetails"],
-  });
+  })
+  .refine(
+    (data) => !(data.hasAllergies === false && data.allergyDetails?.trim()),
+    {
+      message: "You cannot provide allergy details when you have no allergies",
+      path: ["allergyDetails"],
+    },
+  );
 
 export const patientKycStep5Schema = z.object({
   currentMedications: z.array(

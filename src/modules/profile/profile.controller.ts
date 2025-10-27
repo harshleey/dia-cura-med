@@ -2,7 +2,7 @@ import { Response, NextFunction } from "express";
 import { AuthRequest } from "../../middlewares/auth.middleware";
 import { ProfileService } from "./profile.service";
 import { ApiResponse } from "../../utils/response.types";
-import { updateProfileSchema } from "../../validations/profile.validation";
+import { updateProfileSchema } from "./profile.validation";
 
 export const getProfile = async (
   req: AuthRequest,

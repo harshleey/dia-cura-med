@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { updateProfileSchema } from "../../validations/profile.validation";
+import { updateProfileSchema } from "./profile.validation";
 
 // Update DTO
 export type UpdateProfileDTO = z.infer<typeof updateProfileSchema>;

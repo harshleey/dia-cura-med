@@ -17,10 +17,7 @@ import {
   patientKycStep5,
 } from "./kyc.controller";
 import { upload } from "../../config/multer";
-import {
-  validateKycFiles,
-  validateSelfieFile,
-} from "../../validations/doctor-kyc.validation";
+import { validateKycFiles, validateSelfieFile } from "./doctor-kyc.validation";
 upload;
 // Create a specific multer config for doctor KYC
 const doctorKycUpload = upload.fields([
@@ -28,8 +25,6 @@ const doctorKycUpload = upload.fields([
   { name: "medicalCertificateUrl", maxCount: 1 },
   { name: "nationalIdUrl", maxCount: 1 },
 ]);
-
-console.log(doctorKycUpload);
 
 const patientOnly = [authMiddleWare, authorizeRoles("PATIENT")];
 const doctorOnly = [authMiddleWare, authorizeRoles("DOCTOR")];
@@ -46,22 +41,18 @@ router.post("/patient-kyc/consent", patientOnly, patientKycConsent);
 router.post("/doctor-kyc/step1", doctorOnly, doctorKycStep1);
 router.post(
   "/doctor-kyc/step2",
-  requireVerifiedRole(["DOCTOR"]),
+  doctorOnly,
   doctorKycUpload,
   validateKycFiles,
   doctorKycStep2,
 );
 router.post(
   "/doctor-kyc/step3",
-  requireVerifiedRole(["DOCTOR"]),
+  doctorOnly,
   upload.fields([{ name: "selfieUrl", maxCount: 1 }]),
   validateSelfieFile,
   doctorKycStep3,
 );
-router.post(
-  "/doctor-kyc/step4",
-  requireVerifiedRole(["DOCTOR"]),
-  doctorKycConsent,
-);
+router.post("/doctor-kyc/step4", doctorOnly, doctorKycConsent);
 
 export default router;

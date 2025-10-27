@@ -1,7 +1,7 @@
 import { NextFunction, Response, Request } from "express";
 import { z } from "zod";
-import { ApiResponse } from "../utils/response.types";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { ApiResponse } from "../../utils/response.types";
+import { AuthRequest } from "../../middlewares/auth.middleware";
 
 // STEP 1 — Personal Details
 export const doctorKycStep1Schema = z.object({

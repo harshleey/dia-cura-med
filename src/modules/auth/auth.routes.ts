@@ -9,10 +9,7 @@ import {
   refreshToken,
 } from "./auth.controller";
 import { authMiddleWare } from "../../middlewares/auth.middleware";
-import {
-  authorizeRoles,
-  requireVerifiedRole,
-} from "../../middlewares/authorize-roles.middleware";
+import { requireVerifiedRole } from "../../middlewares/authorize-roles.middleware";
 
 const router = Router();
 

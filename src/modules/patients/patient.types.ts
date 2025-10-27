@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { updatePatientSchema } from "../../validations/patients.validation";
+import { updatePatientSchema } from "./patients.validation";
 
 // For update
 export type UpdatePatientDTO = z.infer<typeof updatePatientSchema>;

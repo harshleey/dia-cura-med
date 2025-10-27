@@ -9,9 +9,22 @@ import {
 
 export class PatientService {
   // Get all patients (only approved doctors)
-  static getAllPatients = async (): Promise<PatientListResponseDTO[]> => {
+  static getAllPatients = async (
+    search?: string,
+  ): Promise<PatientListResponseDTO[]> => {
+    const whereClause: any = {
+      kycStatus: "COMPLETED",
+    };
+
+    if (search) {
+      whereClause.OR = [
+        { firstName: { contains: search, mode: "insensitive" } },
+        { lastName: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
     const patients = await prisma.patientKyc.findMany({
-      where: { kycStatus: "COMPLETED" },
+      where: whereClause,
       include: { user: true },
       orderBy: { createdAt: "desc" },
     });
