@@ -2,6 +2,7 @@ import { prisma } from "../../config/db";
 import { UnauthorizedError } from "../../exceptions/unauthorized.exception";
 import { NotFoundError } from "../../exceptions/not-found.exception";
 import { ProfileResponseDTO, UpdateProfileDTO } from "./profile.types";
+import { Prisma } from "@prisma/client";
 
 export class ProfileService {
   static getProfile = async (userId: number): Promise<ProfileResponseDTO> => {
@@ -66,7 +67,7 @@ export class ProfileService {
   };
 
   static deleteProfile = async (userId: number): Promise<void> => {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const user = await tx.users.findUnique({
         where: { id: userId },
         select: { role: true },

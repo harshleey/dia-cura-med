@@ -1,10 +1,20 @@
 import { Request, Response, NextFunction } from "express";
 import { AppError } from "../exceptions/base.exception";
 import { ApiResponse } from "../utils/response.types";
-import { Prisma } from "@prisma/client";
+
+// Import Prisma client to access the namespace
+import { PrismaClient } from "@prisma/client";
+
+// Create a type reference to the Prisma namespace
+type PrismaKnownRequestError =
+  InstanceType<typeof PrismaClient> extends {
+    [key: string]: any;
+  }
+    ? any
+    : any;
 
 export const errorHandler = (
-  err: Error,
+  err: Error | any, // Use any as fallback for Prisma errors
   req: Request,
   res: Response,
   next: NextFunction,
@@ -14,16 +24,9 @@ export const errorHandler = (
     return res.status(err.statusCode).json(ApiResponse.error(err.message));
   }
 
-  // ⚠️ Bad Request (400)
-  if (
-    err.name === "BadRequestError" ||
-    err.message.toLowerCase().includes("bad request")
-  ) {
-    return res.status(400).json(ApiResponse.error("Bad request"));
-  }
-
   // Handle Prisma Known Errors (e.g., unique constraint)
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+  // Check if it's a Prisma error by checking for the code property
+  if (err.code && typeof err.code === "string" && err.code.startsWith("P")) {
     if (err.code === "P2002") {
       const field = (err.meta?.target as string[])?.join(", ") || "field";
       return res
@@ -45,6 +48,14 @@ export const errorHandler = (
     return res
       .status(400)
       .json(ApiResponse.error(`Database error: ${err.message}`));
+  }
+
+  // ⚠️ Bad Request (400)
+  if (
+    err.name === "BadRequestError" ||
+    err.message.toLowerCase().includes("bad request")
+  ) {
+    return res.status(400).json(ApiResponse.error("Bad request"));
   }
 
   // Handle Prisma not found errors

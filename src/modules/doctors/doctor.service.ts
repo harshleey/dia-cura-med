@@ -26,7 +26,7 @@ export class DoctorService {
       orderBy: { createdAt: "desc" },
     });
 
-    return doctors.map((d) => ({
+    return doctors.map((d: DoctorListResponseDTO) => ({
       id: d.id,
       firstName: d.firstName,
       lastName: d.lastName,

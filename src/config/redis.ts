@@ -18,7 +18,7 @@ redisConnection.on("ready", () => {
   console.log("✅ Redis is ready to accept commands");
 });
 
-redisConnection.on("error", (err) => {
+redisConnection.on("error", (err: any) => {
   console.error("❌ Redis connection error:", err);
 });
 

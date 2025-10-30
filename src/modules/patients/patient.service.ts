@@ -29,7 +29,7 @@ export class PatientService {
       orderBy: { createdAt: "desc" },
     });
 
-    return patients.map((p) => ({
+    return patients.map((p: PatientListResponseDTO) => ({
       id: p.id,
       firstName: p.firstName,
       lastName: p.lastName,

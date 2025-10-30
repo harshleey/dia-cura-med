@@ -20,6 +20,7 @@ import {
 } from "./kyc.types";
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 import { emailQueue } from "../../queues/email.queue";
+import { Prisma } from "@prisma/client";
 
 type PatientKycDTO =
   | PatientKycStep1DTO
@@ -214,42 +215,44 @@ export class KycService {
 
     if (!user) throw new NotFoundError("User not found");
 
-    const [kycAgreement, doctorKyc] = await prisma.$transaction(async (tx) => {
-      // Step 1: Create or update consent agreement
-      const kycAgreement = await tx.consentAgreement.upsert({
-        where: { userId },
-        update: {
-          ...data,
-          consentAccepted: true,
-          acceptedAt: new Date(),
-          agreementVersion: "v1.0",
-          ipAddress,
-          consentType: "DOCTOR_KYC",
-        },
-        create: {
-          userId,
-          ...data,
-          consentAccepted: true,
-          acceptedAt: new Date(),
-          agreementVersion: "v1.0",
-          ipAddress,
-          consentType: "DOCTOR_KYC",
-        },
-      });
+    const [kycAgreement, doctorKyc] = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        // Step 1: Create or update consent agreement
+        const kycAgreement = await tx.consentAgreement.upsert({
+          where: { userId },
+          update: {
+            ...data,
+            consentAccepted: true,
+            acceptedAt: new Date(),
+            agreementVersion: "v1.0",
+            ipAddress,
+            consentType: "DOCTOR_KYC",
+          },
+          create: {
+            userId,
+            ...data,
+            consentAccepted: true,
+            acceptedAt: new Date(),
+            agreementVersion: "v1.0",
+            ipAddress,
+            consentType: "DOCTOR_KYC",
+          },
+        });
 
-      // Step 2: Update Doctor KYC status
-      const doctorKyc = await tx.doctorKyc.update({
-        where: { userId },
-        data: {
-          kycStatus: "COMPLETED",
-          currentStep: stepNumber,
-          consentId: kycAgreement.id,
-          updatedAt: new Date(),
-        },
-      });
+        // Step 2: Update Doctor KYC status
+        const doctorKyc = await tx.doctorKyc.update({
+          where: { userId },
+          data: {
+            kycStatus: "COMPLETED",
+            currentStep: stepNumber,
+            consentId: kycAgreement.id,
+            updatedAt: new Date(),
+          },
+        });
 
-      return [kycAgreement, doctorKyc];
-    });
+        return [kycAgreement, doctorKyc];
+      },
+    );
 
     await emailQueue.add("doctor-kyc-completed", {
       email: user.email,

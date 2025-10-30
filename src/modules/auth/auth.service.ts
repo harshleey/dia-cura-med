@@ -22,6 +22,7 @@ import {
 } from "../../utils/jwt";
 import { UnauthorizedError } from "../../exceptions/unauthorized.exception";
 import { ForbiddenError } from "../../exceptions/forbidden.exception";
+import { Prisma } from "@prisma/client";
 
 export class AuthService {
   static createUser = async (data: RegisterDTO) => {
@@ -109,7 +110,7 @@ export class AuthService {
 
     if (!user) throw new NotFoundError("User not found");
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const isTokenValid = await verifyOtpToken(resetToken, parsedId);
       if (!isTokenValid) throw new BadRequestError("Invalid or expired token");
 
@@ -140,7 +141,7 @@ export class AuthService {
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 12);
 
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       await tx.users.update({
         where: { id: userId },
         data: { password: hashedNewPassword },
