@@ -7,6 +7,7 @@
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "postbuild": "cp -r src/config/openapi.yaml dist/config/",
     "format": "prettier --write \"**/*.{ts,js,json,md,prisma}\"",
     "prettier:check": "prettier --check \"**/*.{ts,js,json,md,prisma}\"",
     "migrate:dev": "npx prisma migrate dev",
