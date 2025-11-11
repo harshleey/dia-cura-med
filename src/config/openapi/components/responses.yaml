@@ -1,0 +1,11 @@
+BadRequestError:
+  description: Invalid request parameters
+
+UnauthorizedError:
+  description: Authentication information is missing or invalid
+
+NotFoundError:
+  description: The requested resource was not found
+
+ConflictError:
+  description: The resource already exists

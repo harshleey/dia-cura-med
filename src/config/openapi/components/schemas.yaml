@@ -1,0 +1,98 @@
+RegisterDTO:
+  type: object
+  required: [username, email, password, role]
+  properties:
+    username:
+      type: string
+      example: johndoe
+    email:
+      type: string
+      format: email
+      example: johndoe@gmail.com
+    password:
+      type: string
+      example: Password@123
+    role:
+      type: string
+      enum: [PATIENT, DOCTOR]
+      example: PATIENT
+
+UserResponseDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      example: "1"
+    username:
+      type: string
+      example: johndoe
+    email:
+      type: string
+      example: johndoe@gmail.com
+    role:
+      type: string
+      enum: [PATIENT, DOCTOR]
+
+LoginDTO:
+  type: object
+  required: [email, password]
+  properties:
+    email:
+      type: string
+      example: johndoe@gmail.com
+    password:
+      type: string
+      example: Password@123
+
+LoginResponseDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      example: "1"
+    username:
+      type: string
+      example: johndoe
+    email:
+      type: string
+      example: johndoe@gmail.com
+    role:
+      type: string
+      enum: [PATIENT, DOCTOR]
+    tokens:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+ForgotPasswordDTO:
+  type: object
+  required: [email]
+  properties:
+    email:
+      type: string
+      format: email
+      example: johndoe@gmail.com
+
+ResetPasswordDTO:
+  type: object
+  required: [newPassword]
+  properties:
+    newPassword:
+      type: string
+      example: NewPassword@123
+
+ChangePasswordDTO:
+  type: object
+  required: [oldPassword, newPassword]
+  properties:
+    oldPassword:
+      type: string
+      example: OldPassword@123
+    newPassword:
+      type: string
+      example: NewPassword@123

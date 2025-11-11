@@ -1,0 +1,7 @@
+- name: Auth
+  description: Endpoints for authentication and user account management
+# In future you can add:
+# - name: KYC
+#   description: Endpoints for user verification
+# - name: Patients
+#   description: Endpoints for patient operations

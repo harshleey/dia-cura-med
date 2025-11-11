@@ -1,0 +1,24 @@
+openapi: 3.0.0
+info:
+  title: Dia-Cura Med API
+  version: 1.0.0
+  description: Dia-Cura Med API documentation (Authentication, KYC, Patients, Doctors, etc.)
+
+servers:
+  - url: http://localhost:8009/api
+    description: Development server
+
+tags:
+  $ref: "./tags.yaml"
+
+paths:
+  /auth:
+    $ref: "./paths/auth.yaml"
+
+components:
+  securitySchemes:
+    $ref: "./components/security.yaml"
+  schemas:
+    $ref: "./components/schemas.yaml"
+  responses:
+    $ref: "./components/responses.yaml"

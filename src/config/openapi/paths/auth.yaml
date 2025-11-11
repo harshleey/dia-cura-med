@@ -1,0 +1,151 @@
+/auth/register:
+  post:
+    summary: Register a new user
+    tags: [Auth]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/RegisterDTO"
+    responses:
+      "201":
+        description: User registered successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/UserResponseDTO"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequestError"
+      "409":
+        $ref: "../components/responses.yaml#/ConflictError"
+
+# --------------------------------------------
+
+/auth/login:
+  post:
+    summary: Login an existing user
+    tags: [Auth]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/LoginDTO"
+    responses:
+      "200":
+        description: User logged in successfully
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/LoginResponseDTO"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequestError"
+      "404":
+        $ref: "../components/responses.yaml#/NotFoundError"
+
+# --------------------------------------------
+
+/auth/forgot-password:
+  post:
+    summary: Request a password reset token
+    tags: [Auth]
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/ForgotPasswordDTO"
+    responses:
+      "200":
+        description: Token sent to email successfully
+      "400":
+        $ref: "../components/responses.yaml#/BadRequestError"
+      "404":
+        $ref: "../components/responses.yaml#/NotFoundError"
+
+# --------------------------------------------
+
+/auth/reset-password/{userId}/{resetToken}:
+  post:
+    summary: Reset user password
+    tags: [Auth]
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: resetToken
+        in: path
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/ResetPasswordDTO"
+    responses:
+      "200":
+        description: Password reset successfully
+      "400":
+        $ref: "../components/responses.yaml#/BadRequestError"
+      "404":
+        $ref: "../components/responses.yaml#/NotFoundError"
+
+# --------------------------------------------
+
+/auth/change-password:
+  patch:
+    summary: Change password for an authenticated user
+    tags: [Auth]
+    security:
+      - bearerAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../components/schemas.yaml#/ChangePasswordDTO"
+    responses:
+      "200":
+        description: Password changed successfully
+      "400":
+        $ref: "../components/responses.yaml#/BadRequestError"
+      "401":
+        $ref: "../components/responses.yaml#/UnauthorizedError"
+
+# --------------------------------------------
+
+/auth/logout:
+  post:
+    summary: Logout user and invalidate refresh token
+    tags: [Auth]
+    responses:
+      "200":
+        description: Logged out successfully
+      "401":
+        $ref: "../components/responses.yaml#/UnauthorizedError"
+
+# --------------------------------------------
+
+/auth/refresh-token:
+  post:
+    summary: Refresh expired access token using refresh token cookie
+    tags: [Auth]
+    responses:
+      "200":
+        description: New access token generated
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accessToken:
+                  type: string
+      "400":
+        $ref: "../components/responses.yaml#/BadRequestError"
+      "401":
+        $ref: "../components/responses.yaml#/UnauthorizedError"
