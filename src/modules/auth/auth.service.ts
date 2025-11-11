@@ -23,6 +23,7 @@ import {
 import { UnauthorizedError } from "../../exceptions/unauthorized.exception";
 import { ForbiddenError } from "../../exceptions/forbidden.exception";
 import { Prisma } from "@prisma/client";
+import { NotificationService } from "../notifications/notification.service";
 
 export class AuthService {
   static createUser = async (data: RegisterDTO) => {
@@ -57,12 +58,21 @@ export class AuthService {
       throw new NotFoundError("User not found");
     }
 
+    if (!user.password) {
+      throw new BadRequestError("Invalid Credentials");
+    }
+
     const passwordIsMatch = await comparePassword(password, user.password);
 
     if (!passwordIsMatch) {
       throw new BadRequestError("Invalid Credentials");
     }
-
+    await NotificationService.createNotification({
+      userId: user.id,
+      title: "Logged in",
+      message: `Hello ${user.username}, your account was just logged into.`,
+      type: "GENERAL",
+    });
     return user;
   };
 
@@ -136,6 +146,9 @@ export class AuthService {
     const user = await prisma.users.findUnique({ where: { id: userId } });
     if (!user) throw new BadRequestError("User not found");
 
+    if (!user.password) {
+      throw new BadRequestError("Invalid Credentials");
+    }
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) throw new BadRequestError("Old password is incorrect");
 

@@ -21,6 +21,7 @@ import {
 import { uploadToCloudinary } from "../../utils/uploadToCloudinary";
 import { emailQueue } from "../../queues/email.queue";
 import { Prisma } from "@prisma/client";
+import { NotificationService } from "../notifications/notification.service";
 
 type PatientKycDTO =
   | PatientKycStep1DTO
@@ -115,6 +116,14 @@ export class KycService {
         currentStep: stepNumber,
         consentId: kycAgreement.id,
       },
+    });
+
+    // ✅ Send in-app notification
+    await NotificationService.createNotification({
+      userId,
+      title: "KYC Completed",
+      message: `Congratulations ${user.username}! Your KYC has been successfully completed.`,
+      type: "KYC_STATUS",
     });
 
     await emailQueue.add("patient-kyc-completed", {
@@ -253,6 +262,14 @@ export class KycService {
         return [kycAgreement, doctorKyc];
       },
     );
+
+    // ✅ Send in-app notification
+    await NotificationService.createNotification({
+      userId,
+      title: "KYC Completed",
+      message: `Congratulations ${user.username}! Your KYC has been successfully completed. We will notify you once your kyc is approved`,
+      type: "KYC_STATUS",
+    });
 
     await emailQueue.add("doctor-kyc-completed", {
       email: user.email,

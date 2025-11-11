@@ -1,6 +1,8 @@
 import express, { Express } from "express";
 import helmet from "helmet";
 import cors from "cors";
+import session from "express-session";
+import passport from "./config/passport";
 import compression from "compression";
 import cookieParser from "cookie-parser";
 import "express-async-errors";
@@ -15,6 +17,7 @@ import kycRoutes from "./modules/kyc/kyc.routes";
 import patientRoutes from "./modules/patients/patient.routes";
 import doctorRoutes from "./modules/doctors/doctor.routes";
 import profileRoutes from "./modules/profile/profile.routes";
+import notificationRoutes from "./modules/notifications/notification.routes";
 
 const app: Express = express();
 
@@ -28,6 +31,24 @@ app.use(
 );
 app.use(helmet());
 app.use(compression());
+
+// Basic session configuration (for development)
+app.use(
+  session({
+    secret:
+      process.env.SESSION_SECRET ||
+      "your-fallback-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      maxAge: 1000 * 60 * 60 * 24, // 24 hours
+    },
+  }),
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Swagger setup
 const swaggerDocument = YAML.load(
@@ -46,6 +67,7 @@ app.use("/api/patients", patientRoutes);
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.use(errorHandler);
 

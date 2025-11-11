@@ -10,7 +10,7 @@ export const emailWorker = new Worker(
   async (job) => {
     if (job.name === "send-welcome-email") {
       const { email, username } = job.data;
-      await UserEmailService.sendWelcomeEmail(email, username);
+      await AuthEmailService.sendWelcomeEmail(email, username);
     }
 
     if (job.name === "send-password-reset") {

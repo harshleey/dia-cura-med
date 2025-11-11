@@ -3,6 +3,16 @@ import fs from "fs";
 import path from "path";
 
 export class AuthEmailService {
+  static sendWelcomeEmail(to: string, username: string) {
+    const templatePath = path.join(
+      __dirname,
+      "../templates/auth/welcomeEmail.html",
+    );
+    let html = fs.readFileSync(templatePath, "utf-8");
+    html = html.replace("{{username}}", username);
+
+    return sendEmail(to, "Welcome to Dia-Cura Med", html);
+  }
   static sendResetPasswordEmail(
     to: string,
     username: string,

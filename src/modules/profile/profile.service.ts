@@ -3,6 +3,7 @@ import { UnauthorizedError } from "../../exceptions/unauthorized.exception";
 import { NotFoundError } from "../../exceptions/not-found.exception";
 import { ProfileResponseDTO, UpdateProfileDTO } from "./profile.types";
 import { Prisma } from "@prisma/client";
+import { NotificationService } from "../notifications/notification.service";
 
 export class ProfileService {
   static getProfile = async (userId: number): Promise<ProfileResponseDTO> => {
@@ -22,6 +23,13 @@ export class ProfileService {
         : user.role === "PATIENT"
           ? user.PatientKyc
           : null;
+
+    await NotificationService.createNotification({
+      userId,
+      title: "Profile",
+      message: "Your profile was just checked",
+      type: "GENERAL",
+    });
 
     return {
       id: user.id,

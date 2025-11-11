@@ -12,6 +12,18 @@ tags:
   - name: Auth
     description: Endpoints for authentication and user account management
 
+  - name: KYC
+    description: Endpoints for Doctor and Patient Know Your Customer process
+
+  - name: Patients
+    description: Endpoints for retrieving patient profiles (doctor-only access)
+
+  - name: Doctors
+    description: Endpoints for retrieving approved doctor profiles (patient-only access)
+
+  - name: Profile
+    description: Endpoints for retrieving, updating, and deleting authenticated user profiles
+
 paths:
   /auth/register:
     post:
@@ -153,6 +165,394 @@ paths:
         "401":
           $ref: "#/components/responses/UnauthorizedError"
 
+  /kyc/patient-kyc/step1:
+    post:
+      summary: Patient KYC - Step 1 (Personal Details)
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientKycStep1DTO"
+      responses:
+        "200":
+          description: Patient KYC step 1 completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycSuccessResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+
+  /kyc/patient-kyc/step2:
+    post:
+      summary: Patient KYC - Step 2
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientKycStep2DTO"
+      responses:
+        "200":
+          $ref: "#/components/responses/KycSuccess"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+
+  /kyc/patient-kyc/step3:
+    post:
+      summary: Patient KYC - Step 3
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientKycStep3DTO"
+      responses:
+        "200":
+          $ref: "#/components/responses/KycSuccess"
+
+  /kyc/patient-kyc/step4:
+    post:
+      summary: Patient KYC - Step 4
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientKycStep4DTO"
+      responses:
+        "200":
+          $ref: "#/components/responses/KycSuccess"
+
+  /kyc/patient-kyc/step5:
+    post:
+      summary: Patient KYC - Step 5
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientKycStep5DTO"
+      responses:
+        "200":
+          $ref: "#/components/responses/KycSuccess"
+
+  /kyc/patient-kyc/consent:
+    post:
+      summary: Patient KYC - Final Consent & Agreement
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PatientKycStep6DTO"
+      responses:
+        "200":
+          description: Consent accepted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycSuccessResponse"
+
+  /kyc/doctor-kyc/step1:
+    post:
+      summary: Doctor KYC - Step 1 (Personal Details)
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DoctorKycStep1DTO"
+      responses:
+        "200":
+          $ref: "#/components/responses/KycSuccess"
+
+  /kyc/doctor-kyc/step2:
+    post:
+      summary: Doctor KYC - Step 2 (Proof of Identity)
+      description: Upload Hospital ID, Medical Certificate, and National ID.
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DoctorKycStep2DTO"
+      responses:
+        "200":
+          $ref: "#/components/responses/KycSuccess"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+
+  /kyc/doctor-kyc/step3:
+    post:
+      summary: Doctor KYC - Step 3 (Selfie Upload)
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DoctorKycStep3DTO"
+      responses:
+        "200":
+          $ref: "#/components/responses/KycSuccess"
+
+  /kyc/doctor-kyc/step4:
+    post:
+      summary: Doctor KYC - Step 4 (Consent & Agreement)
+      tags: [KYC]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DoctorKycStep4DTO"
+      responses:
+        "200":
+          description: Consent accepted successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KycSuccessResponse"
+
+  /patients:
+    get:
+      summary: Get all patients
+      description: Retrieve a list of all patients (only accessible by verified doctors).
+      tags: [Patients]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of patients retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PatientListResponseDTO"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /patients/{id}:
+    get:
+      summary: Get patient by ID
+      description: Retrieve detailed information about a specific patient (only accessible by verified doctors).
+      tags: [Patients]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the patient
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Patient data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/PatientResponseDTO"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /doctors:
+    get:
+      summary: Get all approved doctors
+      description: Retrieve a list of all approved doctors (only accessible by verified patients).
+      tags: [Doctors]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of approved doctors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DoctorListResponseDTO"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /doctors/{id}:
+    get:
+      summary: Get approved doctor by ID
+      description: Retrieve detailed information about a specific approved doctor (only accessible by verified patients).
+      tags: [Doctors]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the doctor
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Doctor data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/DoctorResponseDTO"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+  /profile:
+    get:
+      summary: Get current user profile
+      description: Retrieve the profile details of the authenticated and verified user (doctor or patient).
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/ProfileResponseDTO"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+    patch:
+      summary: Update current user profile
+      description: Update profile details for the authenticated and verified user (doctor or patient).
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileDTO"
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Profile updated successfully
+                  data:
+                    $ref: "#/components/schemas/ProfileResponseDTO"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
+    delete:
+      summary: Delete current user profile
+      description: Delete the authenticated user’s profile (doctor or patient).
+      tags: [Profile]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Profile deleted successfully
+        "401":
+          $ref: "#/components/responses/UnauthorizedError"
+        "403":
+          $ref: "#/components/responses/ForbiddenError"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -259,6 +659,441 @@ components:
         newPassword:
           type: string
           example: NewPassword@123
+
+    KycSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Data saved successfully
+        data:
+          type: object
+          example:
+            nextStep: 2
+            id: "123"
+
+    # ------------------- PATIENT KYC -------------------
+    PatientKycStep1DTO:
+      type: object
+      required:
+        [
+          firstName,
+          lastName,
+          email,
+          countryOfResidence,
+          cityOfResidence,
+          phoneNumber,
+          dateOfBirth,
+          gender,
+        ]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        countryOfResidence:
+          type: string
+        cityOfResidence:
+          type: string
+        phoneNumber:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+
+    PatientKycStep2DTO:
+      type: object
+      properties:
+        medicalHistory:
+          type: string
+        conditions:
+          type: array
+          items:
+            type: string
+
+    PatientKycStep3DTO:
+      type: object
+      properties:
+        medicationDetails:
+          type: string
+
+    PatientKycStep4DTO:
+      type: object
+      properties:
+        emergencyContactName:
+          type: string
+        emergencyContactPhone:
+          type: string
+
+    PatientKycStep5DTO:
+      type: object
+      properties:
+        additionalInfo:
+          type: string
+
+    PatientKycStep6DTO:
+      type: object
+      required: [consentAccepted]
+      properties:
+        consentAccepted:
+          type: boolean
+        signature:
+          type: string
+          example: "Base64 encoded signature"
+
+    # ------------------- DOCTOR KYC -------------------
+    DoctorKycStep1DTO:
+      type: object
+      required:
+        [
+          firstName,
+          lastName,
+          email,
+          countryOfResidence,
+          cityOfResidence,
+          phoneNumber,
+          dateOfBirth,
+          gender,
+        ]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        countryOfResidence:
+          type: string
+        cityOfResidence:
+          type: string
+        phoneNumber:
+          type: string
+        dateOfBirth:
+          type: string
+        gender:
+          type: string
+          enum: [Male, Female, Other]
+
+    DoctorKycStep2DTO:
+      type: object
+      required: [hospitalIdCardUrl, medicalCertificateUrl, nationalIdUrl]
+      properties:
+        hospitalIdCardUrl:
+          type: string
+          format: binary
+        medicalCertificateUrl:
+          type: string
+          format: binary
+        nationalIdUrl:
+          type: string
+          format: binary
+
+    DoctorKycStep3DTO:
+      type: object
+      required: [selfieUrl]
+      properties:
+        selfieUrl:
+          type: string
+          format: binary
+
+    DoctorKycStep4DTO:
+      type: object
+      required:
+        [
+          consentAccepted,
+          firstName,
+          lastName,
+          hodFirstName,
+          hodLastName,
+          hodEmail,
+          hodPhone,
+        ]
+      properties:
+        consentAccepted:
+          type: boolean
+          example: true
+        firstName:
+          type: string
+        lastName:
+          type: string
+        hodFirstName:
+          type: string
+        hodLastName:
+          type: string
+        hodEmail:
+          type: string
+          format: email
+        hodPhone:
+          type: string
+
+    PatientListResponseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        phoneNumber:
+          type: string
+          example: "+2348012345678"
+        gender:
+          type: string
+          example: Male
+        age:
+          type: integer
+          example: 32
+        kycStatus:
+          type: string
+          example: VERIFIED
+
+    PatientResponseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 101
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        phoneNumber:
+          type: string
+          example: "+2348012345678"
+        gender:
+          type: string
+          example: Male
+        age:
+          type: integer
+          example: 40
+        dateOfBirth:
+          type: string
+          example: "1985-05-20"
+        diabetesType:
+          type: string
+          example: Type 2
+        otherDiabetesType:
+          type: string
+          example: null
+        diagnosisDate:
+          type: string
+          example: "2020-01-01"
+        tracksInsulin:
+          type: boolean
+          example: true
+        insulinTherapy:
+          type: string
+          example: "Basal-bolus"
+        glucoseUnit:
+          type: string
+          example: "mg/dL"
+        measurementSystem:
+          type: string
+          example: "Metric"
+        hasAllergies:
+          type: boolean
+          example: true
+        allergyDetails:
+          type: string
+          example: "Peanuts"
+        currentMedications:
+          type: array
+          items:
+            type: string
+          example: ["Metformin", "Insulin"]
+        kycStatus:
+          type: string
+          example: VERIFIED
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DoctorListResponseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        firstName:
+          type: string
+          example: Jane
+        lastName:
+          type: string
+          example: Smith
+        email:
+          type: string
+          example: jane.smith@example.com
+        countryOfResidence:
+          type: string
+          example: "Nigeria"
+        cityOfResidence:
+          type: string
+          example: "Lagos"
+        kycStatus:
+          type: string
+          example: VERIFIED
+
+    DoctorResponseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 101
+        userId:
+          type: integer
+          example: 202
+        firstName:
+          type: string
+          example: Jane
+        lastName:
+          type: string
+          example: Smith
+        email:
+          type: string
+          example: jane.smith@example.com
+        countryOfResidence:
+          type: string
+          example: "Nigeria"
+        cityOfResidence:
+          type: string
+          example: "Abuja"
+        phoneNumber:
+          type: string
+          example: "+2348012345678"
+        gender:
+          type: string
+          example: Female
+        dateOfBirth:
+          type: string
+          example: "1985-03-10"
+        selfieUrl:
+          type: string
+          example: "https://s3.amazonaws.com/bucket/uploads/selfie.jpg"
+        kycStatus:
+          type: string
+          example: VERIFIED
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-11-11T08:45:23.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-11-11T10:12:45.000Z"
+
+    UpdateProfileDTO:
+      type: object
+      properties:
+        phoneNumber:
+          type: string
+          example: "+2348012345678"
+        countryOfResidence:
+          type: string
+          example: "Nigeria"
+        cityOfResidence:
+          type: string
+          example: "Lagos"
+        hasAllergies:
+          type: boolean
+          example: true
+        allergyDetails:
+          type: string
+          example: "Peanuts"
+
+    ProfileResponseDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 42
+        username:
+          type: string
+          example: "janedoe"
+        email:
+          type: string
+          example: "janedoe@example.com"
+        role:
+          type: string
+          example: "DOCTOR"
+        profile:
+          oneOf:
+            - $ref: "#/components/schemas/DoctorProfileDTO"
+            - $ref: "#/components/schemas/PatientProfileDTO"
+          nullable: true
+
+    DoctorProfileDTO:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "Jane"
+        lastName:
+          type: string
+          example: "Smith"
+        phoneNumber:
+          type: string
+          example: "+2348012345678"
+        countryOfResidence:
+          type: string
+          example: "Nigeria"
+        cityOfResidence:
+          type: string
+          example: "Abuja"
+        hospitalIdCardUrl:
+          type: string
+          example: "https://s3.amazonaws.com/bucket/hospital-id.jpg"
+        medicalCertificateUrl:
+          type: string
+          example: "https://s3.amazonaws.com/bucket/medical-certificate.jpg"
+        kycStatus:
+          type: string
+          example: VERIFIED
+
+    PatientProfileDTO:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        phoneNumber:
+          type: string
+          example: "+2348012345678"
+        gender:
+          type: string
+          example: "Male"
+        age:
+          type: integer
+          example: 35
+        diabetesType:
+          type: string
+          example: "Type 2"
+        kycStatus:
+          type: string
+          example: VERIFIED
 
   responses:
     BadRequestError:
