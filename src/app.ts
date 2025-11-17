@@ -18,6 +18,8 @@ import patientRoutes from "./modules/patients/patient.routes";
 import doctorRoutes from "./modules/doctors/doctor.routes";
 import profileRoutes from "./modules/profile/profile.routes";
 import notificationRoutes from "./modules/notifications/notification.routes";
+import chatRoutes from "./modules/chat/chat.routes";
+import appointmentRoutes from "./modules/appointments/appointment.routes";
 
 const app: Express = express();
 
@@ -68,6 +70,8 @@ app.use("/api/doctors", doctorRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/chats", chatRoutes);
+app.use("/api/appointments", appointmentRoutes);
 
 app.use(errorHandler);
 

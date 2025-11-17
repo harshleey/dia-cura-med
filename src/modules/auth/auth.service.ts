@@ -67,12 +67,12 @@ export class AuthService {
     if (!passwordIsMatch) {
       throw new BadRequestError("Invalid Credentials");
     }
-    await NotificationService.createNotification({
-      userId: user.id,
-      title: "Logged in",
-      message: `Hello ${user.username}, your account was just logged into.`,
-      type: "GENERAL",
-    });
+    // await NotificationService.createNotification({
+    //   userId: user.id,
+    //   title: "Logged in",
+    //   message: `Hello ${user.username}, your account was just logged into.`,
+    //   type: "GENERAL",
+    // });
     return user;
   };
 

@@ -22,6 +22,13 @@ model Users {
   UserSession      userSession[]
 
   notifications Notification[]
+
+  messages Message[]
+
+  chatParticipants ChatParticipant[]
+
+  patientAppointments Appointment[] @relation("PatientAppointments")
+  doctorAppointments  Appointment[] @relation("DoctorAppointments")
 }
 
 model OtpToken {
@@ -81,6 +88,7 @@ model DoctorKyc {
   phoneNumber           String?
   dateOfBirth           DateTime?
   gender                String?
+  specialization        String?
   hospitalIdCardUrl     String?
   medicalCertificateUrl String?
   nationalIdUrl         String?
@@ -129,6 +137,64 @@ model Notification {
   createdAt DateTime         @default(now())
 
   user Users @relation(fields: [userId], references: [id])
+}
+
+model ChatRoom {
+  id           Int               @id @default(autoincrement())
+  name         String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  messages     Message[]
+  participants ChatParticipant[]
+}
+
+model ChatParticipant {
+  id       Int      @id @default(autoincrement())
+  roomId   Int
+  userId   Int
+  joinedAt DateTime @default(now())
+  user     Users    @relation(fields: [userId], references: [id])
+  room     ChatRoom @relation(fields: [roomId], references: [id])
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  roomId    Int
+  senderId  Int
+  content   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  room   ChatRoom @relation(fields: [roomId], references: [id])
+  sender Users    @relation(fields: [senderId], references: [id])
+}
+
+model Appointment {
+  id            Int               @id @default(autoincrement())
+  doctorId      Int
+  patientId     Int
+  date          DateTime
+  time          String
+  patientNote   String?
+  status        AppointmentStatus @default(PENDING)
+  medicalReport String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  doctor  Users @relation("DoctorAppointments", fields: [doctorId], references: [id])
+  patient Users @relation("PatientAppointments", fields: [patientId], references: [id])
+}
+
+enum AppointmentStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CONFIRMED
+  RESCHEDULED
+  RESCHEDULED_BY_DOCTOR
+  RESCHEDULED_BY_PATIENT
+  RESCHEDULE_CONFIRMED
+  COMPLETED
 }
 
 enum KycStatus {

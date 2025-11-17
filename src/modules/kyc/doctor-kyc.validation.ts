@@ -15,6 +15,7 @@ export const doctorKycStep1Schema = z.object({
     message: "Invalid date format",
   }),
   gender: z.enum(["Male", "Female", "Other"]),
+  specialization: z.string().min(3, "Specialization is required"),
 });
 
 // STEP 2 — Proof of Identity (All 3 Required)

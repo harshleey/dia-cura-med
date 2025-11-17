@@ -1,0 +1,32 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO Test</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  </head>
+  <body>
+    <script>
+      // Replace with your backend URL
+      const socket = io("http://localhost:8009", {
+        auth: {
+          token:
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MywiZW1haWwiOiJsb2d1bi53b251b2xhQGdtYWlsLmNvbSIsInJvbGUiOiJQQVRJRU5UIiwiaWF0IjoxNzYyODk4NDU3LCJleHAiOjE3NjI5MDIwNTd9.s8kIhXcSyUDicLnAPmSxmfebHIUEv5EdiyNz-ucB0OQ",
+        },
+      });
+
+      socket.on("connect", () => {
+        console.log("Connected to server, socket ID:", socket.id);
+      });
+
+      // Listen for notifications
+      socket.on("notification", (data) => {
+        console.log("New notification received:", data);
+        alert(`Notification: ${data.title} - ${data.message}`);
+      });
+
+      socket.on("disconnect", () => {
+        console.log("Disconnected from server");
+      });
+    </script>
+  </body>
+</html>

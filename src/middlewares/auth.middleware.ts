@@ -2,8 +2,10 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiResponse } from "../utils/response.types";
 import { redisConnection } from "../config/redis";
+import { Server } from "socket.io";
 
 export interface AuthRequest extends Request {
+  io?: Server;
   user?: any;
 }
 
