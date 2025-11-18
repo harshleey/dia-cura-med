@@ -4,6 +4,7 @@ dotenv.config();
 import app from "./app";
 import { initSocket } from "./socket";
 import { emailWorker } from "./queues/workers/email.worker";
+import "./utils/cron";
 
 const PORT = process.env.PORT || 5000;
 const server = http.createServer(app);

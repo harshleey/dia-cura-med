@@ -29,6 +29,12 @@ model Users {
 
   patientAppointments Appointment[] @relation("PatientAppointments")
   doctorAppointments  Appointment[] @relation("DoctorAppointments")
+
+  doctorAvailabilities DoctorAvailability[]
+
+  doctorRatings DoctorRating[] @relation("DoctorRatings")
+
+  patientRatings DoctorRating[] @relation("PatientRatings")
 }
 
 model OtpToken {
@@ -183,6 +189,41 @@ model Appointment {
 
   doctor  Users @relation("DoctorAppointments", fields: [doctorId], references: [id])
   patient Users @relation("PatientAppointments", fields: [patientId], references: [id])
+
+  doctorRatings DoctorRating[]
+}
+
+model DoctorAvailability {
+  id        Int                      @id @default(autoincrement())
+  doctorId  Int
+  date      DateTime // e.g., 2025-02-12
+  times     DoctorAvailabilityTime[]
+  createdAt DateTime                 @default(now())
+
+  doctor Users @relation(fields: [doctorId], references: [id])
+}
+
+model DoctorAvailabilityTime {
+  id             Int    @id @default(autoincrement())
+  availabilityId Int
+  startTime      String
+  endTime        String
+
+  availability DoctorAvailability @relation(fields: [availabilityId], references: [id])
+}
+
+model DoctorRating {
+  id            Int      @id @default(autoincrement())
+  doctorId      Int
+  patientId     Int
+  appointmentId Int
+  rating        Int
+  comment       String?
+  createdAt     DateTime @default(now())
+
+  doctor      Users       @relation("DoctorRatings", fields: [doctorId], references: [id])
+  patient     Users       @relation("PatientRatings", fields: [patientId], references: [id])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
 }
 
 enum AppointmentStatus {
@@ -194,7 +235,9 @@ enum AppointmentStatus {
   RESCHEDULED_BY_DOCTOR
   RESCHEDULED_BY_PATIENT
   RESCHEDULE_CONFIRMED
+  ONGOING
   COMPLETED
+  MISSED
 }
 
 enum KycStatus {

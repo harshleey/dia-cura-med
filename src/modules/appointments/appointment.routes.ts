@@ -1,6 +1,14 @@
 // src/modules/appointment/appointment.routes.ts
 import { Router } from "express";
-import { AppointmentController } from "./appointment.controller";
+import {
+  createAppointment,
+  updateAppointment,
+  getUpcomingAppointments,
+  getAppointmentHistory,
+  getOneAppointment,
+  completeConsultation,
+  startConsultation,
+} from "./appointment.controller";
 import { authMiddleWare } from "../../middlewares/auth.middleware";
 import { requireVerifiedRole } from "../../middlewares/authorize-roles.middleware";
 
@@ -10,31 +18,45 @@ router.post(
   "/",
   authMiddleWare,
   requireVerifiedRole(["PATIENT"]),
-  AppointmentController.createAppointment,
+  createAppointment,
 );
 router.patch(
   "/:appointmentId",
   authMiddleWare,
   requireVerifiedRole(["PATIENT", "DOCTOR"]),
-  AppointmentController.updateAppointment,
+  updateAppointment,
 );
 router.get(
   "/upcoming",
   authMiddleWare,
   requireVerifiedRole(["PATIENT", "DOCTOR"]),
-  AppointmentController.getUpcomingAppointments,
+  getUpcomingAppointments,
 );
 router.get(
   "/history",
   authMiddleWare,
   requireVerifiedRole(["PATIENT", "DOCTOR"]),
-  AppointmentController.getAppointmentHistory,
+  getAppointmentHistory,
 );
 router.get(
   "/:appointmentId",
   authMiddleWare,
   requireVerifiedRole(["PATIENT", "DOCTOR"]),
-  AppointmentController.getOneAppointment,
+  getOneAppointment,
+);
+
+router.patch(
+  "/:id/start",
+  authMiddleWare,
+  requireVerifiedRole(["DOCTOR"]),
+  startConsultation,
+);
+
+router.patch(
+  "/:id/complete",
+  authMiddleWare,
+  requireVerifiedRole(["DOCTOR"]),
+  completeConsultation,
 );
 
 export default router;

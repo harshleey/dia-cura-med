@@ -1,42 +1,75 @@
 // src/modules/chat/chat.service.ts
 import { prisma } from "../../config/db";
+import { BadRequestError } from "../../exceptions/bad-request.exception";
 import { NotFoundError } from "../../exceptions/not-found.exception";
 import { NotificationService } from "../notifications/notification.service";
 import { CreateRoomDTO, RoomResponse, SendMessageDTO } from "./chat.types";
 
 export class ChatService {
-  static async createRoom(data: CreateRoomDTO) {
+  static createRoom = async (data: CreateRoomDTO, creatorId: number) => {
+    // Ensure only 1:1 chat is allowed (doctor + patient)
+    if (data.participantIds.length !== 2) {
+      throw new BadRequestError("Only 1:1 chat is allowed");
+    }
+
+    const [userA, userB] = data.participantIds;
+
     // Check if all users exist
-    const existingUsers = await prisma.users.findMany({
+    const users = await prisma.users.findMany({
       where: {
         id: { in: data.participantIds },
       },
-      select: { id: true, username: true },
+      select: { id: true, role: true, username: true },
     });
 
-    const existingUserIds = existingUsers.map((user) => user.id);
-    const missingUserIds = data.participantIds.filter(
-      (id) => !existingUserIds.includes(id),
-    );
-
-    if (missingUserIds.length > 0) {
-      throw new NotFoundError(`Users not found: ${missingUserIds.join(", ")}`);
+    if (users.length !== 2) {
+      throw new NotFoundError("One or more users not found");
     }
 
-    // Check if 1:1 room exists
-    if (data.participantIds.length === 2) {
-      const existingRoom = await prisma.chatRoom.findFirst({
-        where: {
-          participants: {
-            every: { userId: { in: data.participantIds } },
-          },
+    const doctor = users.find((u) => u.role === "DOCTOR");
+    const patient = users.find((u) => u.role === "PATIENT");
+
+    if (!doctor || !patient) {
+      throw new BadRequestError(
+        "Chat allowed only between a doctor and a patient",
+      );
+    }
+
+    // 🔥 Check if an appointment exists between them
+    const appointmentExists = await prisma.appointment.findFirst({
+      where: {
+        doctorId: doctor.id,
+        patientId: patient.id,
+      },
+    });
+
+    if (!appointmentExists) {
+      throw new NotFoundError(
+        "No appointment exists between doctor and patient",
+      );
+    }
+
+    // Prevent non-involved users from creating rooms
+    if (!data.participantIds.includes(creatorId)) {
+      throw new BadRequestError("You are not allowed to create this room");
+    }
+
+    // Check if 1:1 room already exists
+    const existingRoom = await prisma.chatRoom.findFirst({
+      where: {
+        participants: {
+          every: { userId: { in: data.participantIds } },
         },
-        include: { participants: true },
-      });
-      if (existingRoom) return existingRoom;
-    }
+      },
+      include: { participants: true },
+    });
 
-    const room = await prisma.chatRoom.create({
+    if (existingRoom) return existingRoom;
+
+    if (existingRoom) return existingRoom;
+
+    // Create a new chat room
+    return prisma.chatRoom.create({
       data: {
         name: data.name || null,
         participants: {
@@ -45,15 +78,13 @@ export class ChatService {
       },
       include: { participants: true },
     });
+  };
 
-    return room;
-  }
-
-  static async sendMessage(
+  static sendMessage = async (
     userId: number,
     roomId: number,
     data: SendMessageDTO,
-  ) {
+  ) => {
     // Check if user is participant
     const participant = await prisma.chatParticipant.findFirst({
       where: { roomId, userId },
@@ -80,9 +111,9 @@ export class ChatService {
     });
 
     return message;
-  }
+  };
 
-  static async getRoomsForUser(userId: number): Promise<RoomResponse[]> {
+  static getRoomsForUser = async (userId: number): Promise<RoomResponse[]> => {
     const rooms = await prisma.chatParticipant.findMany({
       where: { userId },
       include: {
@@ -130,9 +161,9 @@ export class ChatService {
       createdAt: p.room.createdAt.toISOString(),
       updatedAt: p.room.updatedAt.toISOString(),
     }));
-  }
+  };
 
-  static async getMessages(roomId: number) {
+  static getMessages = async (roomId: number) => {
     return prisma.message.findMany({
       where: { roomId },
       orderBy: { createdAt: "asc" },
@@ -145,5 +176,5 @@ export class ChatService {
         },
       },
     });
-  }
+  };
 }

@@ -6,21 +6,26 @@ import { ApiResponse } from "../../utils/response.types";
 import { CreateRoomDTO, SendMessageDTO } from "./chat.types";
 
 export class ChatController {
-  static async createRoom(req: AuthRequest, res: Response, next: NextFunction) {
+  static createRoom = async (
+    req: AuthRequest,
+    res: Response,
+    next: NextFunction,
+  ) => {
     try {
+      const creatorId = req.user.id;
       const data: CreateRoomDTO = req.body;
-      const room = await ChatService.createRoom(data);
+      const room = await ChatService.createRoom(data, Number(creatorId));
       res.status(201).json(ApiResponse.success("Room created", room));
     } catch (err) {
       next(err);
     }
-  }
+  };
 
-  static async sendMessage(
+  static sendMessage = async (
     req: AuthRequest,
     res: Response,
     next: NextFunction,
-  ) {
+  ) => {
     try {
       const userId = req.user.id;
       const roomId = Number(req.params.roomId);
@@ -29,12 +34,11 @@ export class ChatController {
 
       // Emit via Socket.IO
       req.io?.to(`room_${roomId}`).emit("newMessage", message);
-
       res.status(201).json(ApiResponse.success("Message sent", message));
     } catch (err) {
       next(err);
     }
-  }
+  };
 
   static async getUserRooms(
     req: AuthRequest,

@@ -3,7 +3,7 @@ import { CreateNotificationDTO } from "./notification.types";
 import { io } from "../../server";
 
 export class NotificationService {
-  static async createNotification(data: CreateNotificationDTO) {
+  static createNotification = async (data: CreateNotificationDTO) => {
     const notification = await prisma.notification.create({ data });
 
     // Emit real-time notification to the user
@@ -17,26 +17,26 @@ export class NotificationService {
     });
 
     return notification;
-  }
+  };
 
-  static async getUserNotifications(userId: number) {
+  static getUserNotifications = async (userId: number) => {
     return prisma.notification.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
     });
-  }
+  };
 
-  static async markAsRead(notificationId: number, userId: number) {
+  static markAsRead = async (notificationId: number, userId: number) => {
     return prisma.notification.updateMany({
       where: { id: notificationId, userId },
       data: { isRead: true },
     });
-  }
+  };
 
-  static async markAllAsRead(userId: number) {
+  static markAllAsRead = async (userId: number) => {
     return prisma.notification.updateMany({
       where: { userId, isRead: false },
       data: { isRead: true },
     });
-  }
+  };
 }
